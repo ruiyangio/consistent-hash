@@ -1,7 +1,8 @@
 class Item(object):
-    def __init__(self, name, id):
-        self.name = name
+    def __init__(self, id, name, hash_key):
         self.id = id
+        self.name = name
+        self.hash_key = hash_key
 
 class Node(object):
     def __init__(self, id):
