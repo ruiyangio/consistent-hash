@@ -13,7 +13,7 @@ class ConsistentHash(object):
                 hash_value = get_hash_value(hash_seed + str(i) + "-" + str(j))
                 self.circle.setdefault(hash_value, i)
 
-    def get_bucket(self, source):
+    def get_column(self, source):
         hash_value = get_hash_value(source)
 
         for key in self.circle:
