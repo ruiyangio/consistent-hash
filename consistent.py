@@ -1,3 +1,4 @@
+import util
 from sortedcontainers import SortedDict
 from hashprovider import get_hash_value
 
@@ -12,17 +13,18 @@ class ConsistentHash(object):
         for i in range(self.columns):
             if i not in self.v_buckets_map:
                 self.v_buckets_map[i] = []
-
+    
             for j in range(self.virtual_buckets):
-                hash_value = get_hash_value(hash_seed + str(i) + "-" + str(j))
+                hash_value = get_hash_value(hash_seed, str(i), str(j))
                 self.circle.setdefault(hash_value, i)
-                self.v_buckets_map[i].append(hash_value)
+                self.v_buckets_map[i].append(hash_value)      
 
     def get_column(self, source):
-        hash_value = get_hash_value(source)
+        hash_key = get_hash_value(source, source[0], source[-1])
+        return self.get_column_with_hash_key(hash_key)
 
-        for key in self.circle:
-            if key >= hash_value:
-                return self.circle[key]
-        
-        return self.circle.peekitem(0)[1]
+    def get_column_with_hash_key(self, hash_key):
+        key = util.find_first_ge(self.circle.keys(), hash_key)
+        if key != -1:
+            return (self.circle[key], key)
+        return (self.circle.peekitem(0)[1], -1)
