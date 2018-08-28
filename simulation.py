@@ -27,4 +27,16 @@ def make_cluster(n_node, n_items, v_buckets):
 
     return (test_cluster, consistent_hash)
 
-cluster, hash_meta = make_cluster(5, 10000, 1000)
+test_cluster, hash_meta = make_cluster(5, 10000, 1000)
+# Add node
+test_cluster.add_node_and_rebalance(hash_meta)
+print(test_cluster.get_item_dist())
+
+for i in range(10000):
+    item_id = uuid.uuid4().hex
+    item = cluster.Item(item_id, str(i), get_hash_value(item_id, item_id[0], item_id[-1]))
+    bucket, v_bucket_key = hash_meta.get_column_with_hash_key(item.hash_key)
+    item.v_bucket_key = v_bucket_key
+    test_cluster.nodes[bucket].add_item(item)
+
+print(test_cluster.get_item_dist())

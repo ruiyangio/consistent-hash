@@ -28,10 +28,13 @@ class Node(object):
             self.items[item.id] = item
             self.v_bucket_map[v_bucket_key].add(item.id)
 
-    def remove_v_bucket(self, v_bucket_key):
-        removed_items = {}
-        for item_id in self.v_bucket_map[v_bucket_key]:
-            removed_items[item_id] = self.items.pop(item_id)
+    def remove_v_buckets(self, v_bucket_keys):
+        removed_items = []
+        for v_bucket_key in v_bucket_keys:
+            if v_bucket_key not in self.v_bucket_map:
+                continue
+            for item_id in self.v_bucket_map[v_bucket_key]:
+                removed_items.append(self.items.pop(item_id))
         return removed_items
 
 class Cluster(object):
@@ -45,3 +48,15 @@ class Cluster(object):
     def add_node(self):
         self.nodes.append(Node(self.n))
         self.n += 1
+
+    def get_item_dist(self):
+        return [ len(node.items) for node in self.nodes ]
+
+    def add_node_and_rebalance(self, hash_meta):
+        self.add_node()
+        v_bucket_to_move = hash_meta.add_column()
+        # Rebalance
+        for column in v_bucket_to_move:
+            removed_items = self.nodes[column].remove_v_buckets(v_bucket_to_move[column])
+            for item in removed_items:
+                self.nodes[- 1].add_item(item)
