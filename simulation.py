@@ -46,4 +46,4 @@ def simulation(steps, n_node, n_items, v_buckets):
             print("Add items: " + str(n_items))
             test_cluster.generate_items(n_items)
 
-simulation(10, 5, 10000, 10000)
+simulation(10, 5, 1000000, 500000)

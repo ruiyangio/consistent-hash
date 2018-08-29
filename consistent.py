@@ -1,6 +1,7 @@
 import util
 import random
 import uuid
+import time
 from sortedcontainers import SortedDict
 from hashprovider import get_hash_value
 
@@ -14,6 +15,7 @@ class ConsistentHash(object):
         self.circle = SortedDict()
         self.v_buckets_map = dict()
 
+        start = time.time()
         for i, column_id in enumerate(self.column_ids):
             if column_id not in self.v_buckets_map:
                 self.v_buckets_map[column_id] = set()
@@ -21,7 +23,8 @@ class ConsistentHash(object):
             for j in range(self.virtual_buckets):
                 hash_value = get_hash_value(hash_seed, str(i), str(j))
                 self.circle.setdefault(hash_value, column_id)
-                self.v_buckets_map[column_id].add(hash_value)      
+                self.v_buckets_map[column_id].add(hash_value)
+        print("V_buckets done: " + str(time.time() - start))    
 
     def add_column(self):
         bucket_to_move_per_col = self.total_v_buckets // (self.columns * (self.columns + 1))

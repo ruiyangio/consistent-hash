@@ -99,14 +99,19 @@ class Cluster(object):
 
     def report_uniformality(self):
         item_dist = self.get_item_dist()
+        min_dist = min(item_dist)
+        max_dist = max(item_dist)
+        metric = 2 * (max_dist - min_dist) / (max_dist + min_dist) * 100
         total_count = self.get_item_count()
         if util.test_uniformality(item_dist, len(self.nodes), total_count):
             print("-------------------------------------")
             print("total: " + str(total_count))
+            print("diff: " + str(metric))
             print(item_dist)
             print("Items distribution is uniform")
         else:
             print("-------------------------------------")
             print("total: " + str(total_count))
+            print("diff: " + str(metric))
             print(item_dist)
             print("Not uniform")
