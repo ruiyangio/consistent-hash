@@ -32,7 +32,9 @@ class ConsistentHash(object):
         self.v_buckets_map[new_column_id] = set()
         moved_bucket_keys = {}
 
-        for column_id in self.v_buckets_map: 
+        for column_id in self.v_buckets_map:
+            if column_id == new_column_id:
+                continue
             v_bucket_keys = random.sample(self.v_buckets_map[column_id], bucket_to_move_per_col)
             moved_bucket_keys[column_id] = v_bucket_keys
             
@@ -56,9 +58,10 @@ class ConsistentHash(object):
         random.shuffle(v_buckets)
         # Partition and assign to remaining columns
         partition_start = 0
-        partition_length = len(v_buckets) // self.columns
+        partition_length = (len(v_buckets) // self.columns) + 1
         for column_id in self.column_ids:
             moved_bucket_keys[column_id] = set(v_buckets[partition_start : (partition_start + partition_length)])
+            partition_start += partition_length
             
             for v_bucket_key in moved_bucket_keys[column_id]:
                 self.v_buckets_map[column_id].add(v_bucket_key)

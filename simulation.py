@@ -15,26 +15,24 @@ def make_cluster(n_node, n_items, v_buckets):
         test_cluster.insert_item(item)
     
     # test uniformality
-    item_dist = test_cluster.get_item_dist()
-    if util.test_uniformality(item_dist, n_node, n_items):
-        print(item_dist)
-        print("The cluster is made and items distribution is uniform")
-    else:
-        print("Cluster is not correctly made") 
+    test_cluster.report_uniformality()
 
     return test_cluster
 
+# Init cluster with 5 node, 10000 items and 1000 virtual buckets
 test_cluster = make_cluster(5, 10000, 1000)
 # Add node
 test_cluster.add_node_and_rebalance()
-print(test_cluster.get_item_dist())
+# Add 10000 more new items
+test_cluster.generate_items(10000)
+# Add 9000 more new items
+test_cluster.generate_items(9000)
+# Add one more node
+test_cluster.add_node_and_rebalance()
 
-for i in range(10000):
-    item_id = uuid.uuid4().hex
-    item = cluster.Item(item_id, str(i), get_hash_value(item_id, item_id[0], item_id[-1]))
-    test_cluster.insert_item(item)
-print(test_cluster.get_item_dist())
-
+# Remove first node
 first_node_id = list(test_cluster.nodes.keys())[0]
 test_cluster.remove_node_and_rebalance(first_node_id)
-print(test_cluster.get_item_dist())
+
+# Add one more node
+test_cluster.add_node_and_rebalance()
