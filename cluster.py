@@ -1,3 +1,5 @@
+from consistent import ConsistentHash
+
 class Item(object):
     def __init__(self, id, name, hash_key, v_bucket_key=None):
         self.id = id
@@ -38,25 +40,28 @@ class Node(object):
         return removed_items
 
 class Cluster(object):
-    def __init__(self, n=1):
-        self.nodes = []
+    def __init__(self, n=1, v_buckets=1000):
         self.n = n
+        self.nodes = {}
+        self.meta = ConsistentHash("a", n, v_buckets)
 
-        for i in range(self.n):
-            self.nodes.append(Node(i))
-
-    def add_node(self):
-        self.nodes.append(Node(self.n))
-        self.n += 1
+        for column_id in self.meta.column_ids:
+            self.nodes[column_id] = Node(column_id)
 
     def get_item_dist(self):
-        return [ len(node.items) for node in self.nodes ]
+        return [ len(node.items) for node in self.nodes.values() ]
+    
+    def insert_item(self, item):
+        column_id, v_bucket_key = self.meta.get_column_with_hash_key(item.hash_key)
+        item.v_bucket_key = v_bucket_key
+        self.nodes[column_id].add_item(item)
 
-    def add_node_and_rebalance(self, hash_meta):
-        self.add_node()
-        v_bucket_to_move = hash_meta.add_column()
+    def add_node_and_rebalance(self):
+        self.n += 1
+        new_column_id, v_bucket_to_move = self.meta.add_column()
+        self.nodes[new_column_id] = Node(new_column_id)
         # Rebalance
-        for column in v_bucket_to_move:
-            removed_items = self.nodes[column].remove_v_buckets(v_bucket_to_move[column])
+        for column_id in v_bucket_to_move:
+            removed_items = self.nodes[column_id].remove_v_buckets(v_bucket_to_move[column_id])
             for item in removed_items:
-                self.nodes[- 1].add_item(item)
+                self.nodes[new_column_id].add_item(item)
