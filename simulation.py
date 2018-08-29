@@ -1,4 +1,5 @@
 import uuid
+import random
 import cluster
 import util
 from consistent import ConsistentHash
@@ -19,20 +20,30 @@ def make_cluster(n_node, n_items, v_buckets):
 
     return test_cluster
 
-# Init cluster with 5 node, 10000 items and 1000 virtual buckets
-test_cluster = make_cluster(5, 10000, 1000)
-# Add node
-test_cluster.add_node_and_rebalance()
-# Add 10000 more new items
-test_cluster.generate_items(10000)
-# Add 9000 more new items
-test_cluster.generate_items(9000)
-# Add one more node
-test_cluster.add_node_and_rebalance()
+def simulation(steps, n_node, n_items, v_buckets):
+    print("Create cluster: ")
+    test_cluster = make_cluster(n_node, n_items, v_buckets)
+    operations = ["add_node", "delete_node", "add_items"]
 
-# Remove first node
-first_node_id = list(test_cluster.nodes.keys())[0]
-test_cluster.remove_node_and_rebalance(first_node_id)
+    for i in range(steps):
+        rand_operation = random.choice(operations)
 
-# Add one more node
-test_cluster.add_node_and_rebalance()
+        if rand_operation == "add_node":
+            print("-------------------------------------")
+            print("Add one node to cluster")
+            test_cluster.add_node_and_rebalance()
+        elif rand_operation == "delete_node":
+            node_ids = list(test_cluster.nodes.keys())
+            # only remove if there is node
+            if len(node_ids) > 1:
+                rand_node_id = random.choice(node_ids)
+                print("-------------------------------------")
+                print("Remove node: " + str(rand_node_id))
+                test_cluster.remove_node_and_rebalance(rand_node_id)
+        else:
+            n_items = random.randint(1000, 20000)
+            print("-------------------------------------")
+            print("Add items: " + str(n_items))
+            test_cluster.generate_items(n_items)
+
+simulation(10, 5, 10000, 10000)

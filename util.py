@@ -19,7 +19,7 @@ def find_first_ge(values, key):
 def test_uniformality(data, buckets, n_items):
     # Ktest with uniform cumulative distribution function
     bucket_vol = n_items / buckets
-    d, p = stats.kstest(data, stats.uniform(loc=bucket_vol*0.8, scale=bucket_vol).cdf)
+    d, p = stats.kstest(data, stats.uniform(loc=0.0, scale=bucket_vol).cdf)
     if p < 0.01:
         return True
     return False

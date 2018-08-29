@@ -65,7 +65,7 @@ class ConsistentHash(object):
             
             for v_bucket_key in moved_bucket_keys[column_id]:
                 self.v_buckets_map[column_id].add(v_bucket_key)
-                self.circle.setdefault(v_bucket_key, column_id)
+                self.circle[v_bucket_key] = column_id
         
         return moved_bucket_keys
 
