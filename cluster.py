@@ -36,6 +36,8 @@ class Node(object):
             if v_bucket_key not in self.v_bucket_map:
                 continue
             for item_id in self.v_bucket_map[v_bucket_key]:
+                if item_id not in self.items:
+                    continue
                 removed_items.append(self.items.pop(item_id))
         return removed_items
 
@@ -65,3 +67,13 @@ class Cluster(object):
             removed_items = self.nodes[column_id].remove_v_buckets(v_bucket_to_move[column_id])
             for item in removed_items:
                 self.nodes[new_column_id].add_item(item)
+    
+    def remove_node_and_rebalance(self, node_id):
+        self.n -= 1
+        v_bucket_to_move = self.meta.remove_column(node_id)
+        # Rebalance
+        for column_id in v_bucket_to_move:
+            removed_items = self.nodes[node_id].remove_v_buckets(v_bucket_to_move[column_id])
+            for item in removed_items:
+                self.nodes[column_id].add_item(item)
+        self.nodes.pop(column_id)

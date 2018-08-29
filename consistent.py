@@ -7,7 +7,7 @@ from hashprovider import get_hash_value
 class ConsistentHash(object):
     def __init__(self, hash_seed = "a", columns = 1, virtual_buckets = 1000):
         self.columns = columns
-        self.column_ids = [ uuid.uuid4().hex for i in range(self.columns) ]
+        self.column_ids = set([ uuid.uuid4().hex for i in range(self.columns) ])
         self.hash_seed = hash_seed
         self.virtual_buckets = virtual_buckets
         self.total_v_buckets = columns * virtual_buckets
@@ -27,7 +27,7 @@ class ConsistentHash(object):
         bucket_to_move_per_col = self.total_v_buckets // (self.columns * (self.columns + 1))
         self.columns += 1
         new_column_id = uuid.uuid4()
-        self.column_ids.append(new_column_id)
+        self.column_ids.add(new_column_id)
 
         self.v_buckets_map[new_column_id] = set()
         moved_bucket_keys = {}
@@ -44,7 +44,27 @@ class ConsistentHash(object):
         return (new_column_id, moved_bucket_keys)
 
     def remove_column(self, column_id):
+        moved_bucket_keys = {}
+
+        self.columns -= 1
+        self.column_ids.remove(column_id)
         
+        v_buckets = list(self.v_buckets_map[column_id])
+        # Remove from bucket map
+        self.v_buckets_map.pop(column_id)
+        # Shuffle key for randomness
+        random.shuffle(v_buckets)
+        # Partition and assign to remaining columns
+        partition_start = 0
+        partition_length = len(v_buckets) // self.columns
+        for column_id in self.column_ids:
+            moved_bucket_keys[column_id] = set(v_buckets[partition_start : (partition_start + partition_length)])
+            
+            for v_bucket_key in moved_bucket_keys[column_id]:
+                self.v_buckets_map[column_id].add(v_bucket_key)
+                self.circle.setdefault(v_bucket_key, column_id)
+        
+        return moved_bucket_keys
 
     def get_column(self, source):
         hash_key = get_hash_value(source, source[0], source[-1])
@@ -54,4 +74,5 @@ class ConsistentHash(object):
         key = util.find_first_ge(self.circle.keys(), hash_key)
         if key != -1:
             return (self.circle[key], key)
-        return (self.circle.peekitem(0)[1], -1)
+        first_v_bucket = self.circle.peekitem(0)
+        return (first_v_bucket[1], first_v_bucket[0])

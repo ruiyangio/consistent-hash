@@ -34,3 +34,7 @@ for i in range(10000):
     item = cluster.Item(item_id, str(i), get_hash_value(item_id, item_id[0], item_id[-1]))
     test_cluster.insert_item(item)
 print(test_cluster.get_item_dist())
+
+first_node_id = list(test_cluster.nodes.keys())[0]
+test_cluster.remove_node_and_rebalance(first_node_id)
+print(test_cluster.get_item_dist())
