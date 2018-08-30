@@ -1,5 +1,7 @@
 import uuid
+import random
 import util
+from scipy import stats
 from functools import reduce
 from hashprovider import get_hash_value
 from consistent import ConsistentHash
@@ -22,6 +24,10 @@ class Node(object):
         if item.v_bucket_key not in self.v_bucket_map:
             self.v_bucket_map[item.v_bucket_key] = set()
         self.v_bucket_map[item.v_bucket_key].add(item.id)
+
+    def get_item(self, item_id):
+        if item_id in self.items:
+            return self.items[item_id]
     
     def remove_item(self, item_id):
         v_bucket_key = self.items[item_id].v_bucket_key
@@ -52,11 +58,27 @@ class Cluster(object):
         for column_id in self.meta.column_ids:
             self.nodes[column_id] = Node(column_id)
 
+    def _make_hash_key(self, item_id):
+        return get_hash_value(item_id)
+
+    def _get_item_debug(self, item_id):
+        for node_id in self.nodes:
+            item = self.nodes[node_id].get_item(item_id)
+            if item:
+                return (node_id, item)
+
+    def get_all_item_ids(self):
+        return [ item_id for node in self.nodes.values() for item_id in node.items.keys() ]
+
     def get_item_dist(self):
         return [ len(node.items) for node in self.nodes.values() ]
 
     def get_item_count(self):
         return reduce((lambda a, b: a + b), self.get_item_dist())
+    
+    def get_item(self, item_id):
+        column_id, v_bucket_key = self.meta.get_column_with_hash_key(self._make_hash_key(item_id))
+        return self.nodes[column_id].get_item(item_id)
     
     def insert_item(self, item):
         column_id, v_bucket_key = self.meta.get_column_with_hash_key(item.hash_key)
@@ -66,7 +88,7 @@ class Cluster(object):
     def generate_items(self, n):
         for i in range(n):
             item_id = uuid.uuid4().hex
-            item = Item(item_id, str(i), get_hash_value(item_id, item_id[0], item_id[-1]))
+            item = Item(item_id, str(i), self._make_hash_key(item_id))
             self.insert_item(item)
         
         self.report_uniformality()
@@ -99,19 +121,17 @@ class Cluster(object):
 
     def report_uniformality(self):
         item_dist = self.get_item_dist()
-        min_dist = min(item_dist)
-        max_dist = max(item_dist)
-        metric = 2 * (max_dist - min_dist) / (max_dist + min_dist) * 100
+        coeffient_of_variation = stats.variation(item_dist)
         total_count = self.get_item_count()
         if util.test_uniformality(item_dist, len(self.nodes), total_count):
             print("-------------------------------------")
             print("total: " + str(total_count))
-            print("diff: " + str(metric))
+            print("coeffient_of_variation: " + str(coeffient_of_variation))
             print(item_dist)
             print("Items distribution is uniform")
         else:
             print("-------------------------------------")
             print("total: " + str(total_count))
-            print("diff: " + str(metric))
+            print("coeffient_of_variation: " + str(coeffient_of_variation))
             print(item_dist)
             print("Not uniform")

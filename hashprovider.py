@@ -1,5 +1,4 @@
 from hashlib import sha256
 
-def get_hash_value(key, salt, pepper):
-    seed = key + "_" + salt + "-" + pepper
-    return int.from_bytes(sha256(seed.encode()).digest(), 'big')
+def get_hash_value(key):
+    return int.from_bytes(sha256(key.encode()).digest(), 'big')

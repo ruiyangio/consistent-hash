@@ -21,10 +21,10 @@ class ConsistentHash(object):
                 self.v_buckets_map[column_id] = set()
     
             for j in range(self.virtual_buckets):
-                hash_value = get_hash_value(hash_seed, str(i), str(j))
+                hash_value = get_hash_value(hash_seed + '-' + str(i) + '_' + str(j))
                 self.circle.setdefault(hash_value, column_id)
                 self.v_buckets_map[column_id].add(hash_value)
-        print("V_buckets done: " + str(time.time() - start))    
+        print("v_buckets are made: " + str(time.time() - start))    
 
     def add_column(self):
         bucket_to_move_per_col = self.total_v_buckets // (self.columns * (self.columns + 1))
@@ -73,7 +73,7 @@ class ConsistentHash(object):
         return moved_bucket_keys
 
     def get_column(self, source):
-        hash_key = get_hash_value(source, source[0], source[-1])
+        hash_key = get_hash_value(source)
         return self.get_column_with_hash_key(hash_key)
 
     def get_column_with_hash_key(self, hash_key):

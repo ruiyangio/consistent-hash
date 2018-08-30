@@ -7,23 +7,13 @@ from hashprovider import get_hash_value
 
 def make_cluster(n_node, n_items, v_buckets):
     test_cluster = cluster.Cluster(n_node, v_buckets)
-
-    for i in range(n_items):
-        # Make a random id
-        item_id = uuid.uuid4().hex
-        item = cluster.Item(item_id, str(i), get_hash_value(item_id, item_id[0], item_id[-1]))
-        # find the bucket, bucket number directly map to node
-        test_cluster.insert_item(item)
-    
-    # test uniformality
-    test_cluster.report_uniformality()
-
+    test_cluster.generate_items(n_items)
     return test_cluster
 
 def simulation(steps, n_node, n_items, v_buckets):
     print("Create cluster: ")
     test_cluster = make_cluster(n_node, n_items, v_buckets)
-    operations = ["add_node", "delete_node", "add_items"]
+    operations = ["add_node", "delete_node", "add_items", "get_items"]
 
     for i in range(steps):
         rand_operation = random.choice(operations)
@@ -40,10 +30,19 @@ def simulation(steps, n_node, n_items, v_buckets):
                 print("-------------------------------------")
                 print("Remove node: " + str(rand_node_id))
                 test_cluster.remove_node_and_rebalance(rand_node_id)
-        else:
+        elif rand_operation == "add_items":
             n_items = random.randint(1000, 20000)
             print("-------------------------------------")
             print("Add items: " + str(n_items))
             test_cluster.generate_items(n_items)
+        elif rand_operation == "get_items":
+            ids = test_cluster.get_all_item_ids()
+            rand_ids = random.sample(ids, int(len(ids) * 0.3))
+            print("-------------------------------------")
+            print("Try get some amount of items: " + str(len(rand_ids)))
+            for item_id in rand_ids:
+                item = test_cluster.get_item(item_id)
+                if item.id != item_id:
+                    raise ValueError('Expect: {} but got {}'.format(item_id, item.id))
 
-simulation(10, 5, 1000000, 500000)
+simulation(10, 5, 100000, 10000)
