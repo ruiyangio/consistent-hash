@@ -21,7 +21,7 @@ class TestConsistentHash(unittest.TestCase):
     def test_get_hash_value(self):
         t = {}
         for i in range(100000):
-            mo = hashprovider.get_hash_value(str(i), "a", "b") % 5
+            mo = hashprovider.get_hash_value(str(i)) % 5
             t[mo] = t[mo] + 1 if mo in t else 1
 
         self.assertTrue(util.test_uniformality(list(t.values()), 5, 100000))
