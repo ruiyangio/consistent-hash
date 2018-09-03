@@ -87,4 +87,4 @@ def simulation(steps, n_node, n_items, v_buckets, scale_out_times=5):
     print("Total number of operations: {} Total number of operations result in even distribution: {:d}".format(steps, uniform_count))
     print("Max coefficient of variation: {:f}".format(max(coefficients)))
 
-simulation(100, 5, 100000, 100000)
+simulation(100, 5, 100000, 500000)
