@@ -51,9 +51,10 @@ Method:
 5. Repeat #4 100 times
 
 Report:
+
 | Operations    | Uniformality test passed | Max coefficient of variation |
-| ------------- |:-------------:| -----:|
-| 100           | 100           | 1.4069% |
+| ------------- | ------------------------ | ---------------------------- |
+| 100           | 100                      | 1.4069%                      |
  
 # Handling state of system during transition
 This is complex to simulate. Here are some thoughts:
